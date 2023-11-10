@@ -30,6 +30,7 @@ public class RPIServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        new jcmd();
        
     }
 
