@@ -26,11 +26,12 @@ public class RPIServer extends WebSocketServer {
         System.out.println("Type 'exit' to stop and exit server.");
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
+        new jcmd();
+
     }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        new jcmd();
        
     }
 
