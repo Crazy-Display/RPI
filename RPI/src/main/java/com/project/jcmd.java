@@ -13,8 +13,8 @@ import java.lang.Runtime;
         {
             System.out.println("Iniciant comanda...");
             
-            //String cmd[] = {"~/dev/rpi-rgb-led-matrix/examples-api-use/text-example -x 5 -y 18 -f ~/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf --led-cols=64 --led-rows=64 --led-slowdown-gpio=4 --led-no-hardware-pulse"};
-            String cmd = "ls";
+            String cmd = "~/dev/rpi-rgb-led-matrix/examples-api-use/text-example -x 5 -y 18 -f ~/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf --led-cols=64 --led-rows=64 --led-slowdown-gpio=4 --led-no-hardware-pulse";
+
             try {
                 // objecte global Runtime
                 Runtime rt = java.lang.Runtime.getRuntime();
@@ -22,14 +22,14 @@ import java.lang.Runtime;
                 // executar comanda en subprocess
                 Process p = rt.exec(cmd);
                 // Obtener el stream de entrada del proceso (para escribir en la consola del proceso)
-                //OutputStream processInput = (OutputStream) p.getOutputStream();
+                OutputStream processInput = (OutputStream) p.getOutputStream();
 
                 // Escribir datos en la entrada del proceso (puedes adaptar esto según tus necesidades)
-                /*String inputData = "Funciona";
+                String inputData = "Funciona";
                 processInput.write(inputData.getBytes());
                 processInput.flush();
                 processInput.close();  
-                */
+                
                 // donem un temps d'execució
                 TimeUnit.SECONDS.sleep(5);
                 // el matem si encara no ha acabat
