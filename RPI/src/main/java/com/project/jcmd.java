@@ -13,8 +13,17 @@ import java.lang.Runtime;
         {
             System.out.println("Iniciant comanda...");
             
-            String cmd[] = {"~/dev/rpi-rgb-led-matrix/examples-api-use/text-example", "-x 5", "-y 18", "-f", "~/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf", "--led-cols=64", "--led-rows=64", "--led-slowdown-gpio=4", "--led-no-hardware-pulse"};
-
+            String cmd[] = {
+                "~/dev/rpi-rgb-led-matrix/examples-api-use/text-example",
+                "-x", "5",
+                "-y", "18",
+                "-f", "~/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf",
+                "--led-cols=64",
+                "--led-rows=64",
+                "--led-slowdown-gpio=4",
+                "--led-no-hardware-pulse"
+            };
+            
             try {
                 // objecte global Runtime
                 Runtime rt = java.lang.Runtime.getRuntime();
