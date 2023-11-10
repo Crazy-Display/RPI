@@ -28,6 +28,8 @@ import java.lang.Process;
                 "--led-no-hardware-pulse",
                 "-i", "/dev/text.txt"
             };
+
+            System.out.println(cmd[0]);
             try {
                 // objecte global Runtime
                 Runtime rt = java.lang.Runtime.getRuntime();
