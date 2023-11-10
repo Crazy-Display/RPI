@@ -24,9 +24,9 @@ public class RPIServer extends WebSocketServer {
         int port = getAddress().getPort();
         System.out.println("WebSockets server running at: ws://" + host + ":" + port);
         System.out.println("Type 'exit' to stop and exit server.");
+        new jcmd().main(null);
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
-        new jcmd();
 
     }
 
