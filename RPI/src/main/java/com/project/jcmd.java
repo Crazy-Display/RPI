@@ -45,7 +45,7 @@ import java.lang.Runtime;
                 p.waitFor();
                 // comprovem el resultat de l'execució
                 System.out.println("Comanda 1 exit code="+p.exitValue());
-
+                System.out.println(p.getErrorStream());
                 processInput.close();  
 
      
