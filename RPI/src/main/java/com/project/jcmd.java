@@ -31,13 +31,12 @@ import java.lang.Runtime;
                 // executar comanda en subprocess
                 Process p = rt.exec(cmd);
                 // Obtener el stream de entrada del proceso (para escribir en la consola del proceso)
-                OutputStream processInput = (OutputStream) p.getOutputStream();
+                java.io.OutputStream processInput =  p.getOutputStream();
 
                 // Escribir datos en la entrada del proceso (puedes adaptar esto según tus necesidades)
                 String inputData = "Funciona";
                 processInput.write(inputData.getBytes());
                 processInput.flush();
-                processInput.close();  
                 
                 // donem un temps d'execució
                 TimeUnit.SECONDS.sleep(5);
@@ -46,6 +45,9 @@ import java.lang.Runtime;
                 p.waitFor();
                 // comprovem el resultat de l'execució
                 System.out.println("Comanda 1 exit code="+p.exitValue());
+
+                processInput.close();  
+
      
             } catch (Exception e) {
                 e.printStackTrace();
