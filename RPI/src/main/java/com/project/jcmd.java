@@ -5,7 +5,10 @@ package com.project;
 import org.java_websocket.util.Base64.OutputStream;
 
 import java.lang.Runtime;
-    import java.lang.Process;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.Process;
      
     class jcmd
     {
@@ -45,7 +48,19 @@ import java.lang.Runtime;
                 p.waitFor();
                 // comprovem el resultat de l'execució
                 System.out.println("Comanda 1 exit code="+p.exitValue());
-                System.out.println(p.getErrorStream());
+
+                // Obtener el InputStream de la salida de error del proceso
+                InputStream errorStream = p.getErrorStream();
+
+                // Crear un lector de BufferedReader para leer los mensajes de error
+                BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream));
+
+                // Leer los mensajes de error y mostrarlos
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.err.println(line);
+                }
+
                 processInput.close();  
 
      
