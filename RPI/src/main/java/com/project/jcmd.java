@@ -25,7 +25,8 @@ import java.lang.Process;
                 "--led-cols=64",
                 "--led-rows=64",
                 "--led-slowdown-gpio=4",
-                "--led-no-hardware-pulse"
+                "--led-no-hardware-pulse",
+                "-i", "/dev/text.txt"
             };
             try {
                 // objecte global Runtime
