@@ -12,6 +12,7 @@ import org.json.JSONObject;
 public class RPIServer extends WebSocketServer {
 
     static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+    static Display d;
 
     public RPIServer (int port) {
         super(new InetSocketAddress(port));
@@ -25,7 +26,9 @@ public class RPIServer extends WebSocketServer {
         System.out.println("WebSockets server running at: ws://" + host + ":" + port);
         System.out.println("Type 'exit' to stop and exit server.");
         //Ejecutar Comandas en el la RPI
-        new jcmd().main(null); 
+        jcmd obj_jcmd = new jcmd();
+        obj_jcmd.main(null);
+        d = obj_jcmd.getDisplay();
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
 
@@ -33,7 +36,11 @@ public class RPIServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-       
+        System.out.println("User Connected");
+        if(d.getP().isAlive())
+        {
+            d.killProces();   
+        }   
     }
 
     @Override
