@@ -18,68 +18,40 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.Process;
      
-    class jcmd
-    {
-        static Display d;
-        public static void main(String args[])
-        {
-            Main main_class = new Main();
-            try {
-                String ip = main_class.getLocalIPAddress();
-                System.out.println("Iniciant comanda...");            
-                String userHome = System.getProperty("user.home");
-                String cmd[] = {
-                "text-scroller", "-f",
-                userHome + "/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf",
-                "--led-cols=64",
-                "--led-rows=64",
-                "--led-slowdown-gpio=4",
-                "--led-no-hardware-pulse", ip
-                };
-
-                String filepath = userHome + "/dev/text.txt";
-                try {
-                    String line = Files.readString(Paths.get(filepath), StandardCharsets.UTF_8);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }            
-
-                try {
-                    // objecte global Runtime
-                    Runtime rt = java.lang.Runtime.getRuntime();
-        
-                    // executar comanda en subprocess
-                    Process p = rt.exec(cmd);
-                    d = new Display(p);
-                    
-                    // donem un temps d'execució
-                    // el matem si encara no ha acabat
-                    //TimeUnit.SECONDS.sleep(15);
-                    //if( p.isAlive() ) p.destroy();
-                    //p.waitFor();
-                    /* 
-                    // comprovem el resultat de l'execució
-                    System.out.println("Comanda 1 exit code="+p.exitValue());
-                    */
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            } 
-            // finish
-            System.out.println("Comandes finalitzades.");
-            } catch (SocketException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }}
-
-          
-        public Display getDisplay(){
-            return d;
-        }
-
+class jcmd
+{
+    static Process p;
+    static String cmd[];
+    
+    jcmd(String cmd[] ){
+        this.cmd = cmd;
     }
+    public static void main(String args[])
+    {
+        try 
+        {           
+            // Command line
+
+            // objecte global Runtime
+            Runtime rt = java.lang.Runtime.getRuntime();
+
+            // executar comanda en subprocess
+            p = rt.exec(cmd);
+            
+          
+                
+        } catch (SocketException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }   
+}
+public Process getProcess(){
+        return p;
+    }
+}
 
