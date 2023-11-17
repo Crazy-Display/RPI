@@ -36,6 +36,7 @@ class jcmd
             Runtime rt = java.lang.Runtime.getRuntime();
 
             // executar comanda en subprocess
+            System.out.println("Executing");
             p = rt.exec(cmd);
             
           

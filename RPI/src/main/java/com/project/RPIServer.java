@@ -13,6 +13,7 @@ public class RPIServer extends WebSocketServer {
 
     static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     static Process p;
+    static Process p2;
     static String ip = get_IP();
     static String clientId = "";
     String userHome = System.getProperty("user.home");
@@ -23,6 +24,9 @@ public class RPIServer extends WebSocketServer {
             "--led-rows=64",
             "--led-slowdown-gpio=4",
             "--led-no-hardware-pulse", ip};
+    int numConnFlutter = 0;
+    int numConnApp = 0;
+    String textConnections = "Flutter connections: " + numConnFlutter + "\n" + "App connection: " + numConnApp ;
 
     public RPIServer (int port) {
         super(new InetSocketAddress(port));
@@ -59,6 +63,8 @@ public class RPIServer extends WebSocketServer {
         objId.put("value", clientId);
         conn.send(objId.toString()); 
 
+
+
         if(p.isAlive())
         {
             p.destroy();
@@ -83,21 +89,21 @@ public class RPIServer extends WebSocketServer {
 
             if (message.equalsIgnoreCase("Fluutter")){
                 System.out.println("Flutter user " + clientId + " connected");
+                numConnFlutter = numConnFlutter + 1;
+
             }
             else if (message.equalsIgnoreCase("App")){
                 System.out.println("App user " + clientId + " connected");
+                numConnApp = numConnApp + 1;
+            }
+            
+            if (message.equalsIgnoreCase("Fluutter") || message.equalsIgnoreCase("App") ){
+                
             }
 
-            JSONObject objRequest = new JSONObject(message);
-            //Test
-            objRequest.put("text", "Hola");
-            String texto = objRequest.getString("texto");
-            cmd[-1] = texto; 
-            System.out.println(cmd[-1]);
+            
 
-            jcmd obj_jcmd = new jcmd(cmd);
-            obj_jcmd.main(null);            
-            p = obj_jcmd.getProcess();
+
             setConnectionLostTimeout(0);
             setConnectionLostTimeout(100);
 
