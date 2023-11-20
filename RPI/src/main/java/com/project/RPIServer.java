@@ -20,8 +20,8 @@ public class RPIServer extends WebSocketServer {
     static Process p2;
     static String ip = get_IP();
     static String clientId = "";
-    static jcmd obj_jcmd = new jcmd();
 
+    static jcmd obj_jcmd = new jcmd();
     
     int numConnFlutter = 0;
     int numConnApp = 0;
@@ -56,6 +56,8 @@ public class RPIServer extends WebSocketServer {
         objId.put("from", "server");
         objId.put("value", clientId);
         conn.send(objId.toString()); 
+
+
 
         if(p.isAlive())
         {
@@ -127,8 +129,6 @@ public class RPIServer extends WebSocketServer {
             p.waitFor();
         }
 
-        
-        
         
 
         } catch (Exception e) {
