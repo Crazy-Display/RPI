@@ -21,20 +21,24 @@ import java.lang.Process;
 class jcmd
 {
     static Process p;
-    static String cmd[];
-    
-    jcmd(String cmd[] ){
-        this.cmd = cmd;
-    }
-    public static void main(String args[])
-    {
+    static String userHome = System.getProperty("user.home");
+    static String text = "";
+
+
+public Process runProcess(String text){
         try 
         {           
-            // Command line
+            String cmd[] = {
+            "text-scroller", "-f",
+            userHome + "/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf",
+            "--led-cols=64",
+            "--led-rows=64",
+            "--led-slowdown-gpio=4",
+            "--led-no-hardware-pulse",text};
 
             // objecte global Runtime
             Runtime rt = java.lang.Runtime.getRuntime();
-
+            
             // executar comanda en subprocess
             System.out.println("Executing");
             p = rt.exec(cmd);
@@ -49,10 +53,10 @@ class jcmd
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
-        }   
-}
-public Process getProcess(){
-        return p;
+        }     
+
+    return p;
+
     }
 }
 

@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
+
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -16,14 +18,9 @@ public class RPIServer extends WebSocketServer {
     static Process p2;
     static String ip = get_IP();
     static String clientId = "";
-    String userHome = System.getProperty("user.home");
-    String cmd[] = {
-            "text-scroller", "-f",
-            userHome + "/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf",
-            "--led-cols=64",
-            "--led-rows=64",
-            "--led-slowdown-gpio=4",
-            "--led-no-hardware-pulse", ip};
+    static jcmd obj_jcmd = new jcmd();
+
+    
     int numConnFlutter = 0;
     int numConnApp = 0;
     String textConnections = "Flutter connections: " + numConnFlutter + "\n" + "App connection: " + numConnApp ;
@@ -34,9 +31,6 @@ public class RPIServer extends WebSocketServer {
 
     @Override
     public void onStart() {
-        // CMD
-        
-
         // Quan el servidor s'inicia
         String host = getAddress().getAddress().getHostAddress();
         int port = getAddress().getPort();
@@ -44,9 +38,7 @@ public class RPIServer extends WebSocketServer {
         System.out.println("Type 'exit' to stop and exit server.");
 
         //Execute commands in RPI
-        jcmd obj_jcmd = new jcmd(cmd);
-        obj_jcmd.main(null);        
-        p = obj_jcmd.getProcess();
+        p = obj_jcmd.runProcess(ip);
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
 
@@ -63,12 +55,9 @@ public class RPIServer extends WebSocketServer {
         objId.put("value", clientId);
         conn.send(objId.toString()); 
 
-
-
         if(p.isAlive())
         {
             p.destroy();
-   
         }   
 
     }
@@ -97,13 +86,13 @@ public class RPIServer extends WebSocketServer {
                 numConnApp = numConnApp + 1;
             }
             
-            if (message.equalsIgnoreCase("Fluutter") || message.equalsIgnoreCase("App") ){
-                
-            }
+             p = obj_jcmd.runProcess("Usuarios Flutter " + numConnFlutter + "\n" + "Usuarios App " + numConnApp);
 
+            TimeUnit.SECONDS.sleep(5);
+            // el matem si encara no ha acabat
+            if( p.isAlive() ) p.destroy();
+            p.waitFor();
             
-
-
             setConnectionLostTimeout(0);
             setConnectionLostTimeout(100);
 
@@ -129,7 +118,10 @@ public class RPIServer extends WebSocketServer {
                 String line;
                 line = in.readLine();
                 if (line.equals("exit")) {
-                    p.destroy();
+                    if(p.isAlive() && p != null)
+                    {
+                        p.destroy();
+                    }   
                     running = false;
                 }
             } 
