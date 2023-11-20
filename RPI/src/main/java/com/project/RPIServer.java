@@ -1,9 +1,11 @@
 package com.project;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 import org.java_websocket.WebSocket;
@@ -71,30 +73,63 @@ public class RPIServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
 
-        String clientId = getConnectionId(conn);        
+        String clientId = getConnectionId(conn);  
+        String outputPath = "image.jpg";      
         try {
             //Lee el texo y lo muestra en el display 
             //System.out.println("Mensaje: " + message);
 
-            if (message.equalsIgnoreCase("Fluutter")){
-                System.out.println("Flutter user " + clientId + " connected");
-                numConnFlutter = numConnFlutter + 1;
+            if (message.equalsIgnoreCase("Fluutter")||message.equalsIgnoreCase("App")){
 
+                if (message.equalsIgnoreCase("Fluutter")){
+                    System.out.println("Flutter user " + clientId + " connected");
+                    numConnFlutter = numConnFlutter + 1;
+
+                }
+                else if (message.equalsIgnoreCase("App")){
+                    System.out.println("App user " + clientId + " connected");
+                    numConnApp = numConnApp + 1;
+                }
+                
+                //Te dice los Usuarios Connectados 
+                p = obj_jcmd.runProcess("Usuarios Flutter " + numConnFlutter + "\n" + " Usuarios App " + numConnApp);
+
+                TimeUnit.SECONDS.sleep(5);
+                // el matem si encara no ha acabat
+                if( p.isAlive() ) p.destroy();
+                p.waitFor();
+                
+                setConnectionLostTimeout(0);
+                setConnectionLostTimeout(100);
+        }
+
+        JSONObject obj_json = new JSONObject(message);
+        
+        if (obj_json.getString("type").equals("app")){
+            String base64String = obj_json.getString("image");
+            byte[] imageBytes = Base64.getDecoder().decode(base64String.split(",")[1]);
+
+            try (FileOutputStream fos = new FileOutputStream(outputPath)) {
+                fos.write(imageBytes);
+                System.out.println("Imagen guardada exitosamente en " + outputPath);
+            } catch (IOException e) {
+                System.err.println("Error al escribir el archivo: " + e.getMessage());
             }
-            else if (message.equalsIgnoreCase("App")){
-                System.out.println("App user " + clientId + " connected");
-                numConnApp = numConnApp + 1;
-            }
-            
-             p = obj_jcmd.runProcess("Usuarios Flutter " + numConnFlutter + "\n" + "Usuarios App " + numConnApp);
+        }
+
+        if (obj_json.getString("type").equals("texto")){
+            String texto = obj_json.getString("texto");
+            obj_jcmd.runProcess(texto);
 
             TimeUnit.SECONDS.sleep(5);
             // el matem si encara no ha acabat
             if( p.isAlive() ) p.destroy();
             p.waitFor();
-            
-            setConnectionLostTimeout(0);
-            setConnectionLostTimeout(100);
+        }
+
+        
+        
+        
 
         } catch (Exception e) {
             // TODO: handle exception
