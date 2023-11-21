@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
@@ -23,9 +24,14 @@ public class RPIServer extends WebSocketServer {
 
     static jcmd obj_jcmd = new jcmd();
     
-    int numConnFlutter = 0;
-    int numConnApp = 0;
-    String textConnections = "Flutter connections: " + numConnFlutter + "\n" + "App connection: " + numConnApp ;
+    //Users
+    static ArrayList<WebSocket> flutterCon =  new ArrayList<>();
+    static ArrayList<WebSocket> appCon =  new ArrayList<>();
+
+    //int numConnFlutter = 0;
+    //int numConnApp = 0;
+
+    //String textConnections = "Flutter connections: " + numConnFlutter + "\n" + "App connection: " + numConnApp ;
 
     public RPIServer (int port) {
         super(new InetSocketAddress(port));
@@ -50,12 +56,8 @@ public class RPIServer extends WebSocketServer {
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         clientId = getConnectionId(conn);
         
-        // Li enviem el seu identificador
-        JSONObject objId = new JSONObject("{}");
-        objId.put("type", "id");
-        objId.put("from", "server");
-        objId.put("value", clientId);
-        conn.send(objId.toString()); 
+        // Li enviem Connected
+        conn.send("Connected"); 
 
 
 
@@ -69,7 +71,20 @@ public class RPIServer extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         
+        for (WebSocket c : flutterCon){
+            if(c == conn){
+                flutterCon.remove(conn);
+            }
+        }
+
+        for (WebSocket ca : appCon){
+            if(ca == conn){
+                appCon.remove(conn);
+            }
+        }
+
         System.out.println("Adios");
+        
     }
 
     @Override
@@ -85,16 +100,16 @@ public class RPIServer extends WebSocketServer {
 
                 if (message.equalsIgnoreCase("Fluutter")){
                     System.out.println("Flutter user " + clientId + " connected");
-                    numConnFlutter = numConnFlutter + 1;
+                    flutterCon.add(conn);
 
                 }
                 else if (message.equalsIgnoreCase("App")){
                     System.out.println("App user " + clientId + " connected");
-                    numConnApp = numConnApp + 1;
+                    appCon.add(conn);
                 }
                 
                 //Te dice los Usuarios Connectados 
-                p = obj_jcmd.runProcess("Usuarios Flutter " + numConnFlutter + "\n" + " Usuarios App " + numConnApp);
+                p = obj_jcmd.runProcess("Usuarios Flutter " + flutterCon.size() + "\n" + " Usuarios App " + appCon.size());
 
                 TimeUnit.SECONDS.sleep(5);
                 // el matem si encara no ha acabat
@@ -103,39 +118,54 @@ public class RPIServer extends WebSocketServer {
                 
                 setConnectionLostTimeout(0);
                 setConnectionLostTimeout(100);
-        }
-
-        JSONObject obj_json = new JSONObject(message);
-        
-        if (obj_json.getString("type").equals("app")){
-            String base64String = obj_json.getString("image");
-            byte[] imageBytes = Base64.getDecoder().decode(base64String.split(",")[1]);
-
-            try (FileOutputStream fos = new FileOutputStream(outputPath)) {
-                fos.write(imageBytes);
-                System.out.println("Imagen guardada exitosamente en " + outputPath);
-            } catch (IOException e) {
-                System.err.println("Error al escribir el archivo: " + e.getMessage());
             }
-        }
+            else
+            {
+                //Display img
+                JSONObject obj_json = new JSONObject(message);
+                String type = obj_json.getString("type");
+                System.out.println(type);
 
-        if (obj_json.getString("type").equals("texto")){
-            String texto = obj_json.getString("texto");
-            obj_jcmd.runProcess(texto);
 
-            TimeUnit.SECONDS.sleep(5);
-            // el matem si encara no ha acabat
-            if( p.isAlive() ) p.destroy();
-            p.waitFor();
-        }
+                if (obj_json.getString("type").equals("image")){
+                    String base64String = obj_json.getString("image");
+                    byte[] imageBytes = Base64.getDecoder().decode(base64String.split(",")[1]);
 
+                    try (FileOutputStream fos = new FileOutputStream(outputPath)) {
+                        fos.write(imageBytes);
+                        System.out.println("Imagen guardada exitosamente en " + outputPath);
+                    } catch (IOException e) {
+                        System.err.println("Error al escribir el archivo: " + e.getMessage());
+                    }
+
+                    System.out.println("Hola");
+                    p = obj_jcmd.runProcessImg("aaaa");
+                    TimeUnit.SECONDS.sleep(5);
+                    // el matem si encara no ha acabat
+                    if( p.isAlive() ) p.destroy();
+                    p.waitFor();
+                }
+                
         
 
-        } catch (Exception e) {
-            // TODO: handle exception
-        }
-        
+                //Display Message
+                if (obj_json.getString("type").equals("texto")){
+                    String texto = obj_json.getString("texto");
+                    p = obj_jcmd.runProcess(texto);
+                    TimeUnit.SECONDS.sleep(5);
+                    // el matem si encara no ha acabat
+                    if( p.isAlive() ) p.destroy();
+                    p.waitFor();
+                }
+
+                
+
+            }}catch (Exception e) {
+                    // TODO: handle exception
+                }
     }
+    
+    
 
     @Override
     public void onError(WebSocket conn, Exception ex) {

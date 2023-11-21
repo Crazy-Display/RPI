@@ -25,7 +25,7 @@ class jcmd
     static String text = "";
 
 
-public Process runProcess(String text){
+    public Process runProcess(String text){
         try 
         {           
             String cmd[] = {
@@ -55,8 +55,42 @@ public Process runProcess(String text){
             e.printStackTrace();
         }     
 
-    return p;
+        return p;
 
+    }
+
+    public Process runProcessImg(String text){
+        try 
+        {           
+            String cmd[] = {
+            "led-image-viewer", "-C",
+            userHome + "/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf",
+            "--led-cols=64",
+            "--led-rows=64",
+            "--led-slowdown-gpio=4",
+            "--led-no-hardware-pulse","~/Baixades/logo2.jpeg"
+        };
+
+            // objecte global Runtime
+            Runtime rt = java.lang.Runtime.getRuntime();
+            
+            // executar comanda en subprocess
+            System.out.println("Executing");
+            p = rt.exec(cmd);
+            
+          
+                
+        } catch (SocketException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }     
+
+        return p;
     }
 }
 
