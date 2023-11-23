@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +17,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.json.JSONObject;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -26,6 +29,8 @@ public class RPIServer extends WebSocketServer {
     static Process p2;
     static String ip = get_IP();
     static String clientId = "";
+    static String user = "";
+    static String password = "";
 
     static jcmd obj_jcmd = new jcmd();
     
@@ -54,6 +59,36 @@ public class RPIServer extends WebSocketServer {
         p = obj_jcmd.runProcess(ip);
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
+
+        String filePath =  System.getProperty("user.dir") + "/data/UsersLogIn.json";
+        System.out.println(filePath);
+        
+
+        try (FileReader reader = new FileReader(filePath)) {
+            // Utilizar JsonParser para obtener un JsonElement directamente
+
+            Gson gson = new Gson();
+            JsonObject jsonObject = gson.fromJson(reader, JsonObject.class);
+            System.out.println(jsonObject);
+            System.out.println(jsonObject.get("username"));
+            /* 
+            // Verificar si es un objeto JSON antes de convertirlo
+            if (jsonElement.isJsonObject()) {
+                // Convertir el JsonElement a un JsonObject
+                JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+                System.out.println(jsonObject);
+                // Acceder a los datos en el objeto JsonObject según la estructura de tu JSON
+                 user = jsonObject.get("username").getAsString();
+                 password = jsonObject.get("password").getAsString();
+
+            
+            } else {
+                System.out.println("El JSON no es un objeto.");
+            }*/
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }   
 
@@ -101,34 +136,12 @@ public class RPIServer extends WebSocketServer {
             //System.out.println("Mensaje: " + message);
 
         JSONObject objMessage = new JSONObject(message);
-
-        String filePath = "data/UsersLogIn.json";
-        String user = "";
-        String password = "";
-
-        try (FileReader reader = new FileReader(filePath)) {
-            // Utilizar JsonParser para obtener un JsonElement directamente
-            JsonElement jsonElement = JsonParser.parseReader(reader);
-
-            // Verificar si es un objeto JSON antes de convertirlo
-            if (jsonElement.isJsonObject()) {
-                // Convertir el JsonElement a un JsonObject
-                JsonObject jsonObject = jsonElement.getAsJsonObject();
-
-                // Acceder a los datos en el objeto JsonObject según la estructura de tu JSON
-                 user = jsonObject.get("user").getAsString();
-                 password = jsonObject.get("password").getAsString();
-
-                System.out.println("user: " + user + " password: " + password);
-
-            } else {
-                System.out.println("El JSON no es un objeto.");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         
         String type = objMessage.getString("type");
+
+        System.out.println("user: " + user + " password: " + password);
+        System.out.println(String.valueOf(objMessage));
+
 
         try {
             // El matem si encara no ha acabat
@@ -142,7 +155,7 @@ public class RPIServer extends WebSocketServer {
 
         boolean verification = false;
         if (objMessage.getString("type").equals("verify")){
-            if (user.equals(objMessage.getString("user")) && password.equals(objMessage.getString("password"))){
+            if (user.equals(objMessage.getString("username")) && password.equals(objMessage.getString("password"))){
                 verification = true;
                 conn.send("OK");
             }
