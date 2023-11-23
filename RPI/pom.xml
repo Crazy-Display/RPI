@@ -52,6 +52,11 @@
             <artifactId>slf4j-simple</artifactId>
             <version>2.0.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.9</version> <!-- La versión puede variar, verifica la última versión en Maven Central -->
+        </dependency>
     </dependencies>
     <profiles>
         <profile>

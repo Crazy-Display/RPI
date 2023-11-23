@@ -2,6 +2,7 @@ package com.project;
 
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
@@ -13,6 +14,10 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.json.JSONObject;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class RPIServer extends WebSocketServer {
 
@@ -92,11 +97,64 @@ public class RPIServer extends WebSocketServer {
 
         String clientId = getConnectionId(conn);  
         String outputPath = "image.jpg";      
-        try {
             //Lee el texo y lo muestra en el display 
             //System.out.println("Mensaje: " + message);
 
-            if (message.equalsIgnoreCase("Fluutter")||message.equalsIgnoreCase("App")){
+        JSONObject objMessage = new JSONObject(message);
+
+        String filePath = "data/UsersLogIn.json";
+        String user = "";
+        String password = "";
+
+        try (FileReader reader = new FileReader(filePath)) {
+            // Utilizar JsonParser para obtener un JsonElement directamente
+            JsonElement jsonElement = JsonParser.parseReader(reader);
+
+            // Verificar si es un objeto JSON antes de convertirlo
+            if (jsonElement.isJsonObject()) {
+                // Convertir el JsonElement a un JsonObject
+                JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+                // Acceder a los datos en el objeto JsonObject según la estructura de tu JSON
+                 user = jsonObject.get("user").getAsString();
+                 password = jsonObject.get("password").getAsString();
+
+                System.out.println("user: " + user + " password: " + password);
+
+            } else {
+                System.out.println("El JSON no es un objeto.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        String type = objMessage.getString("type");
+
+        try {
+            // El matem si encara no ha acabat
+            if( p != null && p.isAlive() ) p.destroy();
+            p.waitFor();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
+        boolean verification = false;
+        if (objMessage.getString("type").equals("verify")){
+            if (user.equals(objMessage.getString("user")) && password.equals(objMessage.getString("password"))){
+                verification = true;
+                conn.send("OK");
+            }
+            else {
+                verification = false;
+                conn.send("NOTOK");
+            }
+        }
+
+        if (verification)
+        {
+            if (objMessage.getString("from").equalsIgnoreCase("Fluutter")||objMessage.getString("from").equalsIgnoreCase("App")){
 
                 if (message.equalsIgnoreCase("Fluutter")){
                     System.out.println("Flutter user " + clientId + " connected");
@@ -110,63 +168,37 @@ public class RPIServer extends WebSocketServer {
                 
                 //Te dice los Usuarios Connectados 
                 p = obj_jcmd.runProcess("Usuarios Flutter " + flutterCon.size() + "\n" + " Usuarios App " + appCon.size());
-
-                TimeUnit.SECONDS.sleep(5);
-                // el matem si encara no ha acabat
-                if( p.isAlive() ) p.destroy();
-                p.waitFor();
-                
+                                    
                 setConnectionLostTimeout(0);
                 setConnectionLostTimeout(100);
             }
-            else
-            {
-                //Display img
-                JSONObject obj_json = new JSONObject(message);
-                String type = obj_json.getString("type");
-                System.out.println(type);
-
-
-                if (obj_json.getString("type").equals("image")){
-                    String base64String = obj_json.getString("image");
-                    byte[] imageBytes = Base64.getDecoder().decode(base64String.split(",")[1]);
-
-                    try (FileOutputStream fos = new FileOutputStream(outputPath)) {
-                        fos.write(imageBytes);
-                        System.out.println("Imagen guardada exitosamente en " + outputPath);
-                    } catch (IOException e) {
-                        System.err.println("Error al escribir el archivo: " + e.getMessage());
-                    }
-
-                    System.out.println("Hola");
-                    p = obj_jcmd.runProcessImg("aaaa");
-                    TimeUnit.SECONDS.sleep(5);
-                    // el matem si encara no ha acabat
-                    if( p.isAlive() ) p.destroy();
-                    p.waitFor();
-                }
-                
         
 
-                //Display Message
-                if (obj_json.getString("type").equals("texto")){
-                    String texto = obj_json.getString("texto");
-                    p = obj_jcmd.runProcess(texto);
-                    TimeUnit.SECONDS.sleep(5);
-                    // el matem si encara no ha acabat
-                    if( p.isAlive() ) p.destroy();
-                    p.waitFor();
+            if (objMessage.getString("type").equals("image")){
+
+                String base64String = objMessage.getString("image");
+                byte[] imageBytes = Base64.getDecoder().decode(base64String.split(",")[1]);
+
+                try (FileOutputStream fos = new FileOutputStream(outputPath)) {
+                    fos.write(imageBytes);
+                    System.out.println("Imagen guardada exitosamente en " + outputPath);
+                } catch (IOException e) {
+                    System.err.println("Error al escribir el archivo: " + e.getMessage());
                 }
 
+                System.out.println("Hola");
+                p = obj_jcmd.runProcessImg("aaaa");
+            }
                 
-
-            }}catch (Exception e) {
-                    // TODO: handle exception
-                }
+            //Display Message
+            if (objMessage.getString("type").equals("texto")){
+                String texto = objMessage.getString("texto");
+                p = obj_jcmd.runProcess(texto);
+            }
+        }
     }
     
     
-
     @Override
     public void onError(WebSocket conn, Exception ex) {
         // Quan hi ha un error
@@ -198,10 +230,9 @@ public class RPIServer extends WebSocketServer {
     }
 
     public static String get_IP(){
-        Main main_class = new Main();
         // IP from Main
         try {        
-            return  main_class.getLocalIPAddress(); 
+            return  Main.getLocalIPAddress(); 
 
         } catch (Exception e) {
         }
