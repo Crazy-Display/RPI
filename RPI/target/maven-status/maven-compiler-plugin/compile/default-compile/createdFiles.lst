@@ -1,4 +1,3 @@
 com/project/jcmd.class
-com/project/Main.class
-com/project/RPIServer.class
 com/project/Display.class
+com/project/Main.class

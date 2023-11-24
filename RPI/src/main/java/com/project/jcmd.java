@@ -59,26 +59,14 @@ class jcmd
 
     }
 
-    public Process runProcessImg(String text){
+    public Process runProcessImg(){
         try 
         {           
-            String cmd[] = {
-            "led-image-viewer", "-C",
-            userHome + "/dev/bitmap-fonts/bitmap/cherry/cherry-10-b.bdf",
-            "--led-cols=64",
-            "--led-rows=64",
-            "--led-slowdown-gpio=4",
-            "--led-no-hardware-pulse","~/Baixades/logo2.jpeg"
-        };
+            String command = "cd ~/dev/rpi-rgb-led-matrix/utils &&  ./led-image-viewer -C --led-cols=64 --led-rows=64 --led-slowdown-gpio=4 --led-no-hardware-pulse ~/Baixades/logo2.jpeg";
 
-            // objecte global Runtime
-            Runtime rt = java.lang.Runtime.getRuntime();
-            
-            // executar comanda en subprocess
-            System.out.println("Executing");
-            p = rt.exec(cmd);
-            
-          
+            ProcessBuilder pB = new ProcessBuilder("bash", "-c", command);
+            Process proceso = pB.start();
+
                 
         } catch (SocketException e) {
             // TODO Auto-generated catch block

@@ -31,6 +31,7 @@ public class RPIServer extends WebSocketServer {
     static String clientId = "";
     static String user = "";
     static String password = "";
+    static boolean verification = false;
 
     static jcmd obj_jcmd = new jcmd();
     
@@ -136,12 +137,9 @@ public class RPIServer extends WebSocketServer {
             //System.out.println("Mensaje: " + message);
 
         JSONObject objMessage = new JSONObject(message);
+        System.out.println(objMessage);
+
         
-        String type = objMessage.getString("type");
-
-        System.out.println("user: " + user + " password: " + password);
-        System.out.println(String.valueOf(objMessage));
-
 
         try {
             // El matem si encara no ha acabat
@@ -153,8 +151,13 @@ public class RPIServer extends WebSocketServer {
         }
 
 
-        boolean verification = false;
         if (objMessage.getString("type").equals("verify")){
+
+            user = objMessage.getString("username");
+            password = objMessage.getString("password");
+
+            System.out.println("user: " + user + " password: " + password);
+            
             if (user.equals(objMessage.getString("username")) && password.equals(objMessage.getString("password"))){
                 verification = true;
                 conn.send("OK");
@@ -167,6 +170,10 @@ public class RPIServer extends WebSocketServer {
 
         if (verification)
         {
+
+            String type = objMessage.getString("type");
+            System.out.println(type);
+            /* 
             if (objMessage.getString("from").equalsIgnoreCase("Fluutter")||objMessage.getString("from").equalsIgnoreCase("App")){
 
                 if (message.equalsIgnoreCase("Fluutter")){
@@ -185,12 +192,12 @@ public class RPIServer extends WebSocketServer {
                 setConnectionLostTimeout(0);
                 setConnectionLostTimeout(100);
             }
-        
+        */
 
-            if (objMessage.getString("type").equals("image")){
+            if (type.equals("image")){
 
                 String base64String = objMessage.getString("image");
-                byte[] imageBytes = Base64.getDecoder().decode(base64String.split(",")[1]);
+                byte[] imageBytes = Base64.getDecoder().decode(base64String);
 
                 try (FileOutputStream fos = new FileOutputStream(outputPath)) {
                     fos.write(imageBytes);
@@ -200,13 +207,14 @@ public class RPIServer extends WebSocketServer {
                 }
 
                 System.out.println("Hola");
-                p = obj_jcmd.runProcessImg("aaaa");
+                p = obj_jcmd.runProcessImg();
             }
                 
             //Display Message
-            if (objMessage.getString("type").equals("texto")){
+            if (type.equals("texto")){
                 String texto = objMessage.getString("texto");
                 p = obj_jcmd.runProcess(texto);
+                System.out.println("Texto");
             }
         }
     }
