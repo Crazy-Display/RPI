@@ -1,21 +1,7 @@
 package com.project;
-
-    import java.util.concurrent.TimeUnit;
-
-import org.java_websocket.util.Base64.OutputStream;
-
 import java.lang.Runtime;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.Process;
      
 class jcmd
@@ -60,12 +46,13 @@ class jcmd
     }
 
     public Process runProcessImg(){
+        Process proceso = null;
         try 
         {           
             String command = "cd ~/dev/rpi-rgb-led-matrix/utils &&  ./led-image-viewer -C --led-cols=64 --led-rows=64 --led-slowdown-gpio=4 --led-no-hardware-pulse ~/Baixades/logo2.jpeg";
 
             ProcessBuilder pB = new ProcessBuilder("bash", "-c", command);
-            Process proceso = pB.start();
+            proceso = pB.start();
 
                 
         } catch (SocketException e) {
@@ -78,7 +65,7 @@ class jcmd
             e.printStackTrace();
         }     
 
-        return p;
+        return proceso;
     }
 }
 

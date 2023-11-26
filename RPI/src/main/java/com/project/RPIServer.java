@@ -6,11 +6,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -18,9 +18,9 @@ import org.java_websocket.server.WebSocketServer;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 public class RPIServer extends WebSocketServer {
 
@@ -31,18 +31,18 @@ public class RPIServer extends WebSocketServer {
     static String clientId = "";
     static String user = "";
     static String password = "";
+    static HashMap<WebSocket, String> connectedUsers = new HashMap<>();
+    static ArrayList<String> users = new ArrayList<>();
+    static ArrayList<String> passwords = new ArrayList<>();
     static boolean verification = false;
+    static String usersfilePath =  System.getProperty("user.dir") + "/RPI/data/UsersLogIn.json"; //--
 
     static jcmd obj_jcmd = new jcmd();
     
-    //Users
+    //CONNECTIONS 
     static ArrayList<WebSocket> flutterCon =  new ArrayList<>();
     static ArrayList<WebSocket> appCon =  new ArrayList<>();
 
-    //int numConnFlutter = 0;
-    //int numConnApp = 0;
-
-    //String textConnections = "Flutter connections: " + numConnFlutter + "\n" + "App connection: " + numConnApp ;
 
     public RPIServer (int port) {
         super(new InetSocketAddress(port));
@@ -50,6 +50,7 @@ public class RPIServer extends WebSocketServer {
 
     @Override
     public void onStart() {
+        
         // Quan el servidor s'inicia
         String host = getAddress().getAddress().getHostAddress();
         int port = getAddress().getPort();
@@ -61,52 +62,46 @@ public class RPIServer extends WebSocketServer {
         setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
 
-        String filePath =  System.getProperty("user.dir") + "/data/UsersLogIn.json";
-        System.out.println(filePath);
-        
+        //SAVE AUTHORTISED USERS 
 
-        try (FileReader reader = new FileReader(filePath)) {
-            // Utilizar JsonParser para obtener un JsonElement directamente
-
+        try (FileReader reader = new FileReader(usersfilePath)) {
+            
+            //JSONObject CLIENT 
             Gson gson = new Gson();
             JsonObject jsonObject = gson.fromJson(reader, JsonObject.class);
-            System.out.println(jsonObject);
-            System.out.println(jsonObject.get("username"));
-            /* 
-            // Verificar si es un objeto JSON antes de convertirlo
-            if (jsonElement.isJsonObject()) {
-                // Convertir el JsonElement a un JsonObject
-                JsonObject jsonObject = jsonElement.getAsJsonObject();
 
-                System.out.println(jsonObject);
-                // Acceder a los datos en el objeto JsonObject según la estructura de tu JSON
-                 user = jsonObject.get("username").getAsString();
-                 password = jsonObject.get("password").getAsString();
+            JsonElement jsonElementUsers = jsonObject.get("username");
+            JsonElement jsonElementPasswords = jsonObject.get("password");
 
-            
-            } else {
-                System.out.println("El JSON no es un objeto.");
-            }*/
+            JsonArray jsonArrayUsers = jsonElementUsers.getAsJsonArray();
+            JsonArray jsonArrayPaswords = jsonElementPasswords.getAsJsonArray();
+
+            System.out.println(usersfilePath);
+
+            // SAVE USERS IN LIST 
+            for (JsonElement element : jsonArrayUsers) {
+                users.add(element.getAsString());
+                
+            }
+            // SAVE PASSWORDS IN LIST
+            for (JsonElement element : jsonArrayPaswords) {
+                passwords.add(element.getAsString());
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }   
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        clientId = getConnectionId(conn);
-        
+        clientId = getConnectionId(conn);     
         // Li enviem Connected
-        conn.send("Connected"); 
+        conn.send("Connected");
 
-
-
-        if(p.isAlive())
+        if(p != null && p.isAlive())
         {
             p.destroy();
         }   
-
     }
 
     @Override
@@ -117,82 +112,87 @@ public class RPIServer extends WebSocketServer {
                 flutterCon.remove(conn);
             }
         }
-
         for (WebSocket ca : appCon){
             if(ca == conn){
                 appCon.remove(conn);
             }
         }
-
+        connectedUsers.remove(conn);
         System.out.println("Adios");
-        
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
 
-        String clientId = getConnectionId(conn);  
+        //MESSAGE SYSTEM
+        
         String outputPath = "image.jpg";      
-            //Lee el texo y lo muestra en el display 
-            //System.out.println("Mensaje: " + message);
-
+        System.out.println(message);
         JSONObject objMessage = new JSONObject(message);
         System.out.println(objMessage);
 
-        
-
+        /* 
         try {
             // El matem si encara no ha acabat
-            if( p != null && p.isAlive() ) p.destroy();
-            p.waitFor();
+            if( p != null && p.isAlive() ) p.destroy();     // Para matar la img comanda kill led-image-viewer
+                //p.waitFor();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
+        */
 
         if (objMessage.getString("type").equals("verify")){
 
             user = objMessage.getString("username");
             password = objMessage.getString("password");
 
-            System.out.println("user: " + user + " password: " + password);
             
-            if (user.equals(objMessage.getString("username")) && password.equals(objMessage.getString("password"))){
-                verification = true;
-                conn.send("OK");
-            }
-            else {
-                verification = false;
-                conn.send("NOTOK");
+
+            for (int i = 0; i< users.size(); i++ )
+            {
+                System.out.println("user: " + user + " password: " + password);
+                System.out.println("user: " + users.get(i) + " password: " + passwords.get(i));
+
+                if (user.equals(users.get(i)) && password.equals(passwords.get(i))){
+                    verification = true;
+                    connectedUsers.put(conn, user );
+                    // ADD CONNECTIONS TO ARRAYS
+                    if (objMessage.getString("from").equalsIgnoreCase("Flutter"))
+                    {
+                        System.out.println("Flutter user " + user + " connected");
+                        flutterCon.add(conn);
+                        break;
+                    }
+                    if (objMessage.getString("from").equalsIgnoreCase("App"))
+                    {
+                        System.out.println("App user " + user + " connected");
+                        appCon.add(conn);
+                        break;  
+                    }
+                    conn.send("OK");
+
+                    //Te dice los Usuarios Connectados 
+                    p = obj_jcmd.runProcess("Usuarios Flutter " + flutterCon.size() + "\n" + " Usuarios App " + appCon.size());
+                                        
+                    setConnectionLostTimeout(0);
+                    setConnectionLostTimeout(100);
+                }
+                
+                else {
+                    verification = false;
+                    conn.send("NOTOK");
+                }
             }
         }
 
+        
+        System.out.println("verification : " + verification);
+        System.out.println(connectedUsers);
         if (verification)
         {
-
             String type = objMessage.getString("type");
             System.out.println(type);
-            /* 
-            if (objMessage.getString("from").equalsIgnoreCase("Fluutter")||objMessage.getString("from").equalsIgnoreCase("App")){
-
-                if (message.equalsIgnoreCase("Fluutter")){
-                    System.out.println("Flutter user " + clientId + " connected");
-                    flutterCon.add(conn);
-
-                }
-                else if (message.equalsIgnoreCase("App")){
-                    System.out.println("App user " + clientId + " connected");
-                    appCon.add(conn);
-                }
-                
-                //Te dice los Usuarios Connectados 
-                p = obj_jcmd.runProcess("Usuarios Flutter " + flutterCon.size() + "\n" + " Usuarios App " + appCon.size());
-                                    
-                setConnectionLostTimeout(0);
-                setConnectionLostTimeout(100);
-            }
-        */
 
             if (type.equals("image")){
 
@@ -206,26 +206,52 @@ public class RPIServer extends WebSocketServer {
                     System.err.println("Error al escribir el archivo: " + e.getMessage());
                 }
 
-                System.out.println("Hola");
-                p = obj_jcmd.runProcessImg();
+                 p = obj_jcmd.runProcessImg();
             }
                 
             //Display Message
             if (type.equals("texto")){
                 String texto = objMessage.getString("texto");
-                p = obj_jcmd.runProcess(texto);
-                System.out.println("Texto");
+                System.out.println("Text: " + texto);
+                System.out.println(user);
+                 p = obj_jcmd.runProcess(texto);
+            }
+
+            if(type.equals("users")){
+                
+                /* Set<WebSocket> connUsers = connectedUsers.keySet();
+                ArrayList<WebSocket> connList = new ArrayList<>(connUsers); */
+
+                ArrayList<String> flutterUsers = new ArrayList<>();
+                ArrayList<String> appUsers = new ArrayList<>();
+
+                for (WebSocket c : flutterCon){
+                    if (connectedUsers.get(c) != null){
+                        flutterUsers.add(connectedUsers.get(c));
+                    }
+                }
+                for (WebSocket c : appCon){
+                    if (connectedUsers.get(c) != null){
+                        appUsers.add(connectedUsers.get(c));
+                    }
+                }
+                
+                JSONObject requestedUsers = new JSONObject();
+                requestedUsers.put(type, "users");
+                requestedUsers.put("usersFlutter", flutterUsers);
+                requestedUsers.put("usersApp", appUsers);
+
+                conn.send(requestedUsers.toString());
             }
         }
     }
     
-    
+        
     @Override
     public void onError(WebSocket conn, Exception ex) {
         // Quan hi ha un error
         ex.printStackTrace();
     }
-
 
     public void runServerBucle () {
         boolean running = true;
@@ -236,7 +262,7 @@ public class RPIServer extends WebSocketServer {
                 String line;
                 line = in.readLine();
                 if (line.equals("exit")) {
-                    if(p.isAlive() && p != null)
+                    if(p != null && p.isAlive())
                     {
                         p.destroy();
                     }   
