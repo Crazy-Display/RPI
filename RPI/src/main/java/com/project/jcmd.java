@@ -49,7 +49,7 @@ class jcmd
         Process proceso = null;
         try 
         {           
-            String command = "cd ~/dev/rpi-rgb-led-matrix/utils &&  ./led-image-viewer -C --led-cols=64 --led-rows=64 --led-slowdown-gpio=4 --led-no-hardware-pulse ~/Baixades/logo2.jpeg";
+            String command = "cd ~/dev/rpi-rgb-led-matrix/utils &&  ./led-image-viewer -C --led-cols=64 --led-rows=64 --led-slowdown-gpio=4 --led-no-hardware-pulse ~/bin/RPI/RPI/image.jpg";
 
             ProcessBuilder pB = new ProcessBuilder("bash", "-c", command);
             proceso = pB.start();
