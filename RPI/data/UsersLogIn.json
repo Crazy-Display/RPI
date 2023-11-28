@@ -1,0 +1,5 @@
+{
+    "type": "verify",
+    "username": ["admin","rob"],
+    "password": ["123","456"]
+}   
